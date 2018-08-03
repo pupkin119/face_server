@@ -12,6 +12,7 @@ class Clients(models.Model):
 
 class Client_imgs(models.Model):
     client_id = models.ForeignKey(Clients, on_delete=models.CASCADE)
-    encoded_image = models.CharField(max_length=245000)
+    image_path = models.CharField(max_length=200)
+    # encoded_image = models.CharField(max_length=245000)
 
 

@@ -50,34 +50,33 @@ def addNewId(request):
         client_id = request.POST['client_id']
         restaurant_id = request.POST['restaurant_id']
         encoded_image = request.POST['encoded_image']
+        time_now = timezone.now()
         try:
             co = Clients.objects.get(client_id=request.POST['client_id'])
-        except TypeError:
+        except(Clients.DoesNotExist):
             c = Clients()
             c.client_id = client_id
             c.restaurant_id = restaurant_id
-            c.created_at = timezone.now()
-            c.updated_at = timezone.now()
+
+            c.created_at = time_now
+            c.updated_at = time_now
             c.save()
 
-            ci = Client_imgs(id=None, encoded_image=encoded_image, client_id=c)
+            filename = 'Database/' + client_id + '/' + client_id + '_' + str(time_now) + '.jpg'
+
+            ci = Client_imgs(id=None, image_path=filename, client_id=c)
             ci.save()
         else:
             co = Clients.objects.get(client_id=request.POST['client_id'])
-            co.updated_at = timezone.now()
+            co.updated_at = time_now
             co.save()
 
-            ci = Client_imgs(id=None, encoded_image=encoded_image, client_id=co)
+            filename = 'Database/' + client_id + '/' + client_id + '_' + str(time_now) + '.jpg'
+            ci = Client_imgs(id=None, image_path=filename, client_id=co)
             ci.save()
 
-
-        # ci = Client_imgs(id = None, encoded_image=encoded_image, client_id = c)
-        # ci.save()
-
-
-
-        pathlib.Path('testAlign/' + client_id).mkdir(parents=True, exist_ok=True)
-        filename = 'testAlign/' + client_id + '/1.jpg'
+        pathlib.Path('Database/' + client_id).mkdir(parents=True, exist_ok=True)
+        filename = 'Database/' + client_id + '/' + client_id + '_' + str(time_now)+ '.jpg'
 
         with open(filename, "wb") as fh:
             fh.write(base64.standard_b64decode(encoded_image))
@@ -86,52 +85,52 @@ def addNewId(request):
 
 @csrf_exempt
 def editId(request, client_id):
-    if request.method == 'GET':
-        if not(verificationKey(request.POST['auth_key'])):
-            sendError(dic['InvalidAuthKey'])
-            return HttpResponse('no')
-
-        client_id_new = request.POST['client_id']
-        restaurant_id_new = request.POST['restaurant_id']
-        encoded_image_new = request.POST['encoded_image']
-
-        try:
-            my_record = CreateId.objects.get(client_id = client_id)
-        except(CreateId.DoesNotExist):
-            sendError(dic['ClientNotFound'])
-            return HttpResponse('no')
-        else:
-            shutil.rmtree('testAlign/' + str(client_id), ignore_errors=True)
-
-            pathlib.Path('testAlign/' + client_id_new).mkdir(parents=True, exist_ok=True)
-            filename = 'testAlign/' + client_id_new + '/1.jpg'
-
-            with open(filename, "wb") as fh:
-                fh.write(base64.standard_b64decode(encoded_image_new))
-
-            my_record.client_id = client_id_new
-            my_record.restaurant_id = restaurant_id_new
-            my_record.encoded_image = encoded_image_new
-            my_record.save()
-
-            sendError(dic['NoError'])
+    # if request.method == 'POST':
+    #     if not(verificationKey(request.POST['auth_key'])):
+    #         sendError(dic['InvalidAuthKey'])
+    #         return HttpResponse('no')
+    #
+    #     client_id_new = request.POST['client_id']
+    #     restaurant_id_new = request.POST['restaurant_id']
+    #     encoded_image_new = request.POST['encoded_image']
+    #
+    #     try:
+    #         my_record = Clients.objects.get(client_id = client_id)
+    #     except(Clients.DoesNotExist):
+    #         sendError(dic['ClientNotFound'])
+    #         return HttpResponse('no')
+    #     else:
+    #         shutil.rmtree('testAlign/' + str(client_id), ignore_errors=True)
+    #
+    #         pathlib.Path('testAlign/' + client_id_new).mkdir(parents=True, exist_ok=True)
+    #         filename = 'testAlign/' + client_id_new + '/1.jpg'
+    #
+    #         with open(filename, "wb") as fh:
+    #             fh.write(base64.standard_b64decode(encoded_image_new))
+    #
+    #         my_record.client_id = client_id_new
+    #         my_record.restaurant_id = restaurant_id_new
+    #         # my_record.encoded_image = encoded_image_new
+    #         my_record.save()
+    #
+    #
+    #
+    #         sendError(dic['NoError'])
     return HttpResponse ('yes')
 
 @csrf_exempt
 def deleteId(request, client_id):
-    print(str(request.method))
     if request.method == 'DELETE':
-        print('THIS IS REALY DELETE METHOD')
         # if not(verificationKey(request.DELETE['auth_key'])):
         #     sendError(dic['InvalidAuthKey'])
         #     return HttpResponse('no')
         try:
-            q = Clients.objects.get(client_id=client_id)
-        except TypeError:
+            c = Clients.objects.get(client_id=client_id)
+        except(Clients.DoesNotExist):
             return HttpResponse('no')
         else:
-            shutil.rmtree('testAlign/' + str(client_id), ignore_errors=True)
-            q.delete()
+            shutil.rmtree('Database/' + str(client_id), ignore_errors=True)
+            c.delete()
 
         sendError(dic['NoError'])
     return HttpResponse('yes')
