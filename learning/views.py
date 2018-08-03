@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from account.models import CreateId
+# from account.models import CreateId
 import urllib3
 from django.views.decorators.csrf import csrf_exempt
 import numpy as np
@@ -34,28 +34,28 @@ def sendError(errorName):
 
 @csrf_exempt
 def statrtLearning(request):
-    if request.method == 'POST':
-        if not(verificationKey(request.POST['auth_key'])):
-            sendError(dic['InvalidAuthKey'])
-            return HttpResponse('no')
-        my_record_count = CreateId.objects.count()
-        my_record_ids = CreateId.objects.only('client_id')
-
-        for i in np.arange(my_record_count):
-            my_file = Path("faceVerification/" + str(my_record_ids[int(i)].client_id) + ".jpg")
-            if my_file.is_file():
-                continue
-            else:
-                try:
-                    copyfile('testAlign/' + str(my_record_ids[int(i)].client_id) + '/1.jpg', 'faceVerification/' + str(my_record_ids[int(i)].client_id) + '.jpg')
-                except FileNotFoundError:
-                    q = WriteErrorToDb()
-                    q.module = 'startLearning'
-                    q.client_id = my_record_ids[int(i)].client_id
-                    q.error_id = 41
-                    q.save()
-                else:
-                    continue
-
-        sendError(dic['NoError'])
+    # if request.method == 'POST':
+    #     if not(verificationKey(request.POST['auth_key'])):
+    #         sendError(dic['InvalidAuthKey'])
+    #         return HttpResponse('no')
+    #     my_record_count = CreateId.objects.count()
+    #     my_record_ids = CreateId.objects.only('client_id')
+    #
+    #     for i in np.arange(my_record_count):
+    #         my_file = Path("faceVerification/" + str(my_record_ids[int(i)].client_id) + ".jpg")
+    #         if my_file.is_file():
+    #             continue
+    #         else:
+    #             try:
+    #                 copyfile('testAlign/' + str(my_record_ids[int(i)].client_id) + '/1.jpg', 'faceVerification/' + str(my_record_ids[int(i)].client_id) + '.jpg')
+    #             except FileNotFoundError:
+    #                 q = WriteErrorToDb()
+    #                 q.module = 'startLearning'
+    #                 q.client_id = my_record_ids[int(i)].client_id
+    #                 q.error_id = 41
+    #                 q.save()
+    #             else:
+    #                 continue
+    #
+    #     sendError(dic['NoError'])
     return HttpResponse('yes')

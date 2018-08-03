@@ -1,17 +1,20 @@
 from django.shortcuts import render
 from django.http import HttpResponse, Http404, HttpResponseBadRequest, HttpRequest
-from .models import CreateId
+from pexpect import expect
+# from pylint.test.functional import continue_in_finally
+
+from .models import Clients, Client_imgs
 import base64
 import urllib3
 from django.views.decorators.csrf import csrf_exempt
 import pathlib
 import shutil
+from django.utils import timezone
 
 httpAdress = 'http://127.0.0.1:8000/v2222/account/authentication/'
 
 dic = {'NoError': 0, 'InvalidAuthKey': 10, 'ClientNotFound': 20, 'RestaurantNotFound': 21, 'ImageNotValid': 22, 'AuthError': 30,
       'ClientImageEncodeNotFound': 31}
-
 
 
 from django.db import models
@@ -47,11 +50,31 @@ def addNewId(request):
         client_id = request.POST['client_id']
         restaurant_id = request.POST['restaurant_id']
         encoded_image = request.POST['encoded_image']
-        q = CreateId()
-        q.client_id = client_id
-        q.restaurant_id = restaurant_id
-        q.encoded_image = encoded_image
-        q.save()
+        try:
+            co = Clients.objects.get(client_id=request.POST['client_id'])
+        except TypeError:
+            c = Clients()
+            c.client_id = client_id
+            c.restaurant_id = restaurant_id
+            c.created_at = timezone.now()
+            c.updated_at = timezone.now()
+            c.save()
+
+            ci = Client_imgs(id=None, encoded_image=encoded_image, client_id=c)
+            ci.save()
+        else:
+            co = Clients.objects.get(client_id=request.POST['client_id'])
+            co.updated_at = timezone.now()
+            co.save()
+
+            ci = Client_imgs(id=None, encoded_image=encoded_image, client_id=co)
+            ci.save()
+
+
+        # ci = Client_imgs(id = None, encoded_image=encoded_image, client_id = c)
+        # ci.save()
+
+
 
         pathlib.Path('testAlign/' + client_id).mkdir(parents=True, exist_ok=True)
         filename = 'testAlign/' + client_id + '/1.jpg'
@@ -96,17 +119,21 @@ def editId(request, client_id):
 
 @csrf_exempt
 def deleteId(request, client_id):
-    if request.method == 'GET':
-        if not(verificationKey(request.GET['auth_key'])):
-            sendError(dic['InvalidAuthKey'])
+    print(str(request.method))
+    if request.method == 'DELETE':
+        print('THIS IS REALY DELETE METHOD')
+        # if not(verificationKey(request.DELETE['auth_key'])):
+        #     sendError(dic['InvalidAuthKey'])
+        #     return HttpResponse('no')
+        try:
+            q = Clients.objects.get(client_id=client_id)
+        except TypeError:
             return HttpResponse('no')
-
-        q = CreateId.objects.get(client_id = client_id)
-        shutil.rmtree('testAlign/' + str(client_id), ignore_errors=True)
-        q.delete()
+        else:
+            shutil.rmtree('testAlign/' + str(client_id), ignore_errors=True)
+            q.delete()
 
         sendError(dic['NoError'])
-
     return HttpResponse('yes')
 
 # @csrf_exempt

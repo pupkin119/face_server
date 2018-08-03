@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import CreateId
+from .models import Clients
 # Register your models here.
 
-admin.site.register(CreateId)
+admin.site.register(Clients)
 
 # admin.site.unregister(Groups)
 # admin.site.unregister(Users)
