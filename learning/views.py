@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import JsonResponse
 # from account.models import CreateId
 import urllib3
 from django.views.decorators.csrf import csrf_exempt
@@ -12,7 +12,7 @@ from .models import WriteErrorToDb
 
 
 # Create your views here.
-httpAdress = 'http://127.0.0.1:8000/v2222/account/authentication/'
+# httpAdress = 'http://127.0.0.1:8000/v2222/account/authentication/'
 
 dic = {'NoError': 0, 'InvalidAuthKey': 10, 'ClientNotFound': 20, 'RestaurantNotFound': 21, 'ImageNotValid': 22, 'AuthError': 30,
       'ClientImageEncodeNotFound': 31}
@@ -58,4 +58,4 @@ def statrtLearning(request):
     #                 continue
     #
     #     sendError(dic['NoError'])
-    return HttpResponse('yes')
+    return JsonResponse({'error': '0'})

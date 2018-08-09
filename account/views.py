@@ -1,31 +1,24 @@
-from django.shortcuts import render
-from django.http import HttpResponse, Http404, HttpResponseBadRequest, HttpRequest
-from pexpect import expect
+from django.http import HttpResponse, JsonResponse
 # from pylint.test.functional import continue_in_finally
 
 from .models import Clients, Client_imgs
 import base64
-import urllib3
 from django.views.decorators.csrf import csrf_exempt
 import pathlib
 import shutil
 from django.utils import timezone
 
-httpAdress = 'http://127.0.0.1:8000/v2222/account/authentication/'
+# httpAdress = 'http://127.0.0.1:8000/v2222/account/authentication/'
 
-dic = {'NoError': 0, 'InvalidAuthKey': 10, 'ClientNotFound': 20, 'RestaurantNotFound': 21, 'ImageNotValid': 22, 'AuthError': 30,
-      'ClientImageEncodeNotFound': 31}
-
-
-from django.db import models
-
-# Create your views here.
+dicError = {'NoError': {'error': '0'}, 'InvalidAuthKey': {'error': '10'}, 'ClientNotFound': {'error': '20'},
+            'RestaurantNotFound': {'error': '21'}, 'ImageNotValid': {'error': '22'},'AuthError': {'error': '30'},
+           'ClientImageEncodeNotFound': {'error': '31'}}
 
 # def Index(request): #Дефаутный индекс
 # #     return render(request, 'account/index.html')
 
 def verificationKey(authKey):
-    # TODO
+    # TODO authKey
     return 1
 
 # Коды ошибок
@@ -35,17 +28,16 @@ def verificationKey(authKey):
 # 22 - Не валидное изображение
 # 30 - Ошибка аутентификации
 # 31 - Клиент с таким encoded_image не найден
-def sendError(errorName):
-    http = urllib3.PoolManager()
-    http.request('POST', httpAdress, fields={"error ": errorName,})
 
+# def sendError(errorName):
+# #     http = urllib3.PoolManager()
+# #     http.request('POST', httpAdress, fields={"error ": errorName,})
 
 @csrf_exempt
 def addNewId(request):
     if request.method == 'POST':
         if not(verificationKey(request.POST['auth_key'])):
-            sendError(dic['InvalidAuthKey'])
-            return HttpResponse('no')
+            return JsonResponse({'error': '10'})
 
         client_id = request.POST['client_id']
         restaurant_id = request.POST['restaurant_id']
@@ -76,12 +68,23 @@ def addNewId(request):
             ci.save()
 
         pathlib.Path('Database/' + client_id).mkdir(parents=True, exist_ok=True)
-        filename = 'Database/' + client_id + '/' + client_id + '_' + str(time_now)+ '.jpg'
+        filename = 'Database/' + client_id + '/' + client_id + '_' + str(time_now) + '.jpg'
 
         with open(filename, "wb") as fh:
             fh.write(base64.standard_b64decode(encoded_image))
-        sendError(dic['NoError'])
-    return HttpResponse('yes')
+    return JsonResponse({'error': '0'})
+
+@csrf_exempt
+def deleteId(request, client_id):
+    if request.method == 'DELETE':
+        try:
+            c = Clients.objects.get(client_id=client_id)
+        except(Clients.DoesNotExist):
+            return JsonResponse({'error': '20'})
+        else:
+            shutil.rmtree('Database/' + str(client_id), ignore_errors=True)
+            c.delete()
+    return JsonResponse({'error': '0'})
 
 @csrf_exempt
 def editId(request, client_id):
@@ -117,23 +120,6 @@ def editId(request, client_id):
     #
     #         sendError(dic['NoError'])
     return HttpResponse ('yes')
-
-@csrf_exempt
-def deleteId(request, client_id):
-    if request.method == 'DELETE':
-        # if not(verificationKey(request.DELETE['auth_key'])):
-        #     sendError(dic['InvalidAuthKey'])
-        #     return HttpResponse('no')
-        try:
-            c = Clients.objects.get(client_id=client_id)
-        except(Clients.DoesNotExist):
-            return HttpResponse('no')
-        else:
-            shutil.rmtree('Database/' + str(client_id), ignore_errors=True)
-            c.delete()
-
-        sendError(dic['NoError'])
-    return HttpResponse('yes')
 
 # @csrf_exempt
 # def authentication(request):
